@@ -47,7 +47,7 @@ public class ChatController {
 
     @GetMapping("/send")
     public String sendMsg(@AuthenticationPrincipal OAuth2User user,@RequestParam("message") String msg){
-        if (!msg.strip().equals("")) {
+        if (!msg.trim().equals("")) {
             this.messageService.addMessage(new Message(msg, new BigInteger((String) Objects.requireNonNull(user
                     .getAttribute("sub")))));
         }
