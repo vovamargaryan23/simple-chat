@@ -5,8 +5,6 @@ import com.chatapp.chatapp.model.User;
 import com.chatapp.chatapp.service.MessageService;
 import com.chatapp.chatapp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
@@ -14,7 +12,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
-import java.util.Map;
 import java.util.Objects;
 
 @Controller
@@ -38,10 +35,8 @@ public class ChatController {
                                             user.getAttribute("picture")));
 
         //Get User info
-        model.addAttribute("usr_name", this.userService.getbyId(new BigInteger((String) Objects.requireNonNull(user
-                .getAttribute("sub")))).getUser_name());
-        model.addAttribute("usr_pic",this.userService.getbyId(new BigInteger((String) Objects.requireNonNull(user
-                .getAttribute("sub")))).getUser_pic());
+        model.addAttribute("curr_user_id", this.userService.getbyId(new BigInteger((String) Objects.requireNonNull(user
+                .getAttribute("sub")))).getUser_id());
 
         model.addAttribute("messages", messageService.getAll());
         model.addAttribute("message",new Message());
