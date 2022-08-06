@@ -1,99 +1,156 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/1999/html">
+
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+        integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
-            crossorigin="anonymous"></script>
-    <link rel="stylesheet" type="text/css" media="all"
-          href="./css/style.css" th:href="@{/css/style.css}" />
+        integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"
+        integrity="sha512-iKDtgDyTHjAitUDdLljGhenhPwrbBfqTKWO1mkhSFH3A7blITC9MhYon6SjnMhp4o0rADGw9yAC6EW4t5a4K3g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"
+        integrity="sha512-1QvjE7BtotQjkq8PxLeF6P46gEpBRXuskzIVgjFpekzFVF4yjRgrQvTG1MTOJ3yQgvTteKAcO7DSZI92+u/yZw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
+
 <body>
+    <script>
+        var stompClient = null;
+        var messages = [];
+        var socket = new SockJS('/chat-example');
 
-<main class="content">
-    <div class="position-relative">
-        <div class="chat-messages p-4">
-            <th:block th:each="message : ${messages}">
-            <div class="chat-message-left pb-4" th:if="${message.user.user_id} != ${curr_user_id}">
-                <div class="pe-3">
-                    <img th:src="${message.user.user_pic}"
-                         class="rounded-circle mr-1 float-left" alt="Img" width="40" height="40">
-                    <div class="text-muted small text-nowrap mt-2">2:37 am</div>
-                </div>
-                <div class="flex-shrink-1 bg-light bg-gradient rounded py-2 px-3 ml-3">
-                    <div class="font-weight-bold mb-1" th:text="${message.user.user_name}"></div>
-                    <p th:text="${message.message}"></p>
+        function connect() {
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, frame => {
+                console.log('Connected: ' + frame);
+                stompClient.subscribe('/topic/send', (message) => {
+
+                });
+            });
+        }
+
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+            }
+            console.log("Disconnected");
+        }
+
+        function sendMessage(message, user_id) {
+            stompClient.send("/chat/msg", {}, JSON.stringify({ message, user_id }));
+        }
+
+        connect();
+
+        function send() {
+            msg = $("#message").val();
+            id = $("#user_id").val();
+            if (msg.length !== 0) {
+                $("#message").val('');
+                sendMessage(msg, id);
+                $('#maincont').load('');
+            }
+        }
+
+    </script>
+    <main class="content" id="maincont">
+        <div class="position-relative">
+            <div class="chat-messages p-4">
+                <th:block th:each="message : ${messages}">
+                    <div class="chat-message-left pb-4" th:if="${message.user.user_id} != ${curr_user_id}">
+                        <div class="pe-3">
+                            <img th:src="${message.user.user_pic}" class="rounded-circle mr-1 float-left" alt="Img"
+                                width="40" height="40">
+                        </div>
+                        <div class="flex-shrink-1 bg-light bg-gradient rounded py-2 px-3 ml-3">
+                            <div class="font-weight-bold mb-1" th:text="${message.user.user_name}"></div>
+                            <p th:text="${message.message}"></p>
+                        </div>
+                    </div>
+                    <div class="chat-message-right mb-4" th:if="${message.user.user_id} == ${curr_user_id}">
+                        <div class="ps-3">
+                            <img th:src="${message.user.user_pic}" class="rounded-circle mr-1" alt="Img" width="40"
+                                height="40">
+                        </div>
+                        <div class="flex-shrink-1 bg-primary bg-gradient rounded py-2 px-3 mr-3 text-white">
+                            <div class="font-weight-bold mb-1" th:text="${message.user.user_name}"></div>
+                            <p th:text="${message.message}"></p>
+                        </div>
+                    </div>
+                </th:block>
+            </div>
+            <div>
+                <div class="fixed-bottom bg-light fixed-form">
+                    <div class="flex-grow-0 py-2 px-4 border-top">
+                        <div class="input-group">
+                            <!-- <form th:action="@{/chat/send}" th:method="post" th:object="${message}" class="input-group"> -->
+                            <textarea type="text" class="form-control" id="message" placeholder="Type your message"
+                                style="resize:none; height: 3em; "></textarea>
+                            <input type="hidden" th:value="${curr_user_id}" id="user_id">
+                            <button type="button" class="btn btn-primary" onclick="send()">Send</button>
+                            <!-- </form> -->
+                        </div>
+                    </div>
+                    <div class="logout-btn px-5 py-2 col-md-12 text-center">
+                        <a href="/logout" class="btn btn-primary">Logout</a>
+                    </div>
                 </div>
             </div>
-            <div class="chat-message-right mb-4" th:if="${message.user.user_id} == ${curr_user_id}">
-                <div class="ps-3">
-                    <img th:src="${message.user.user_pic}" class="rounded-circle mr-1"
-                         alt="Img" width="40" height="40">
-                    <div class="text-muted small text-nowrap mt-2">2:38 am</div>
-                </div>
-                <div class="flex-shrink-1 bg-primary bg-gradient rounded py-2 px-3 mr-3 text-white">
-                    <div class="font-weight-bold mb-1" th:text="${message.user.user_name}"></div>
-                    <p th:text="${message.message}"></p>
-                </div>
-            </div>
-            </th:block>
         </div>
-        <div class="flex-grow-0 py-3 px-4 border-top">
-            <div class="input-group">
-                <form th:action="@{/chat/send}" th:method="get" enctype="text/plain" th:object="${message}" class="input-group">
-                    <input type="text" th:field="*{message}" class="form-control" placeholder="Type your message">
-                    <button type="submit" class="btn btn-primary">Send</button>
-                </form>
-            </div>
-        </div>
-        <div class="logout-btn pb-5 float-start">
-            <a href="/logout" class="btn btn-primary">Logout</a>
-        </div>
-    </div>
-</main>
-<style>
-    .chat-messages {
-    display: flex;
-    flex-direction: column;
-    max-height: 100%;
-    overflow-y: scroll
-}
+    </main>
+    <style>
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+            overflow-y: hidden;
+        }
 
-.chat-message-left,
-.chat-message-right {
-    display: flex;
-    flex-shrink: 0;
-}
+        .chat-message-left,
+        .chat-message-right {
+            display: flex;
+            flex-shrink: 0;
+        }
 
-.chat-message-left {
-    margin-right: auto;
-}
+        .chat-message-left {
+            margin-right: auto;
+        }
 
-.chat-message-right {
-    flex-direction: row-reverse;
-    margin-left: auto
-}
+        .chat-message-right {
+            flex-direction: row-reverse;
+            margin-left: auto
+        }
 
-.py-3 {
-    padding-top: 1rem !important;
-    padding-bottom: 1rem !important;
-}
+        .py-3 {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+        }
 
-.px-4 {
-    padding-right: 1.5rem !important;
-    padding-left: 1.5rem !important;
-}
+        .px-4 {
+            padding-right: 1.5rem !important;
+            padding-left: 1.5rem !important;
+        }
 
-.flex-grow-0 {
-    flex-grow: 0 !important;
-}
+        .flex-grow-0 {
+            flex-grow: 0 !important;
+        }
 
-.border-top {
-    border-top: 1px solid #dee2e6 !important;
-}
-</style>
+        .border-top {
+            border-top: 1px solid #dee2e6 !important;
+        }
+
+        .fixed-form {
+            width: 100%;
+            position: sticky !important;
+        }
+    </style>
 </body>
+
 </html>

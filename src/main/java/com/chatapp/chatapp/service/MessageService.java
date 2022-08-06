@@ -27,7 +27,7 @@ public class MessageService {
         return this.repo.findById(id);
     }
 
-    public void addMessage(Message message){
-        this.repo.save(message);
+    public Message addMessage(Message message){
+       return this.repo.save(message);
     }
 }
